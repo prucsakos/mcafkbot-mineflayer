@@ -3,7 +3,7 @@ const { pathfinder, Movements, goals } = require('mineflayer-pathfinder')
 const { GoalNear } = goals
 
 const DEBUGMODE = true
-let antiAfkEnabled = true
+let antiAfkEnabled = false
 let antiAfkInterval = 10000
 const options = {
     host: 'Ryy1.aternos.me', // Change this to the ip you want.
