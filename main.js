@@ -61,19 +61,20 @@ function antiAfkFnc() {
 
     if (antiAfkEnabled) {
         antiAfkInterval = setInterval(() => {
-            // Jump
-            bot.setControlState('jump', true);
-            setTimeout(() => bot.setControlState('jump', false), 100);
-
-            // Rotate 360 degrees
-            let currentYaw = bot.entity.yaw;
-            let newYaw = currentYaw + Math.PI; // Rotate 180 degrees
             bot.look(newYaw, 0, false); // pitch is set to 0, false for smooth movement
 
             // Move a little bit
             // Toggle forward movement briefly
             bot.setControlState('forward', true);
-            setTimeout(() => bot.setControlState('forward', false), 100); // Move forward for 1 second
+            setTimeout(() => bot.setControlState('forward', false), 300); // Move forward for 1 second
+            
+            // Jump
+            bot.setControlState('jump', true);
+            setTimeout(() => bot.setControlState('jump', false), 100);
+            
+            // Rotate 360 degrees
+            let currentYaw = bot.entity.yaw;
+            let newYaw = currentYaw + Math.PI; // Rotate 180 degrees
 
         }, 10000); // Every 10 seconds
     } else {
