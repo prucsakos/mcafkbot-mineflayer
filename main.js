@@ -2,6 +2,8 @@ const mineflayer = require('mineflayer')
 const { pathfinder, Movements, goals } = require('mineflayer-pathfinder')
 const { GoalNear } = goals
 
+const http = require('http');
+
 const VERSION = "10"
 const DEBUGMODE = true
 const ANTIAFKATSTART = true
@@ -214,6 +216,35 @@ bot.once('spawn', () => {
     
 
   })
+
+
+
+  /////////// CREATE HTTP CONNECTION
+  // Create a simple HTTP server
+const server = http.createServer((req, res) => {
+    // Simple routing
+    if (req.url === '/') {
+        res.writeHead(200, {'Content-Type': 'text/html'});
+        res.write('<h1>Welcome to the Bot Control Panel</h1>');
+        res.end();
+    } else if (req.url === '/status') {
+        const status = {
+            online: bot && bot.isOnline(), // Check if the bot is online
+            // Add more status indicators as needed
+        };
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify(status));
+    } else {
+        // Not found
+        res.writeHead(404);
+        res.end('Not Found');
+    }
+});
+
+// Listen on port 3000 for HTTP requests
+server.listen(3000, () => {
+    console.log('HTTP server running on http://localhost:3000');
+});
 
 
 
