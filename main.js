@@ -4,9 +4,9 @@ const { GoalNear } = goals
 
 const VERSION = "10"
 const DEBUGMODE = true
-const ANTIAFKATSTART = true
-const ANTIAFK_FORWARDTIME = 1000
-const ANTIAFK_JUMPTIME = 500
+//const ANTIAFKATSTART = true
+//const ANTIAFK_FORWARDTIME = 1000
+//const ANTIAFK_JUMPTIME = 500
 let antiAfkEnabled = false
 let antiAfkInterval = 10000
 const options = {
@@ -52,32 +52,32 @@ function findClosestBed() {
     }
 }
 
-function antiAfkFnc() {
-    antiAfkEnabled = !antiAfkEnabled;
-    bot.chat(antiAfkEnabled ? "Anti AFK bekapcsolva." : "Anti AFK kikapcsolva.");
-
-    if (antiAfkEnabled) {
-        antiAfkInterval = setInterval(() => {
-            // Rotate 360 degrees
-            let currentYaw = bot.entity.yaw;
-            let newYaw = currentYaw + Math.PI; // Rotate 180 degrees
-            bot.look(newYaw, 0, false); // pitch is set to 0, false for smooth movement
-
-            // Move a little bit
-            // Toggle forward movement briefly
-            bot.setControlState('forward', true);
-            setTimeout(() => bot.setControlState('forward', false), ANTIAFK_FORWARDTIME); // Move forward for 1 second
-            
-            // Jump
-            bot.setControlState('jump', true);
-            setTimeout(() => bot.setControlState('jump', false), ANTIAFK_JUMPTIME);
-            
-
-        }, 10000); // Every 10 seconds
-    } else {
-        clearInterval(antiAfkInterval);
-    }
-}
+//function antiAfkFnc() {
+//    antiAfkEnabled = !antiAfkEnabled;
+//    bot.chat(antiAfkEnabled ? "Anti AFK bekapcsolva." : "Anti AFK kikapcsolva.");
+//
+//    if (antiAfkEnabled) {
+//        antiAfkInterval = setInterval(() => {
+//            // Rotate 360 degrees
+//            let currentYaw = bot.entity.yaw;
+//            let newYaw = currentYaw + Math.PI; // Rotate 180 degrees
+//            bot.look(newYaw, 0, false); // pitch is set to 0, false for smooth movement
+//
+//            // Move a little bit
+//            // Toggle forward movement briefly
+//            bot.setControlState('forward', true);
+//            setTimeout(() => bot.setControlState('forward', false), ANTIAFK_FORWARDTIME); // Move forward for 1 second
+//            
+//            // Jump
+//            bot.setControlState('jump', true);
+//            setTimeout(() => bot.setControlState('jump', false), ANTIAFK_JUMPTIME);
+//            
+//
+//        }, 10000); // Every 10 seconds
+//    } else {
+//        clearInterval(antiAfkInterval);
+//    }
+//}
 
 function createBot(options) {
     return mineflayer.createBot(options)
@@ -96,11 +96,11 @@ function setupBot(bot) {
     //////// SPAWN
     bot.once('spawn', () => {
 
-        if (ANTIAFKATSTART){
-            if (!antiAfkEnabled) {
-                antiAfkFnc()
-            }
-        }
+//        if (ANTIAFKATSTART){
+//            if (!antiAfkEnabled) {
+//                antiAfkFnc()
+//            }
+//        }
 
         bot.chat('Hali, jöttem afkolni')
 
@@ -172,16 +172,16 @@ function setupBot(bot) {
         })
 
         // CHAT EVENTS for antiafk
-        bot.chatAddPattern(
-            /^<(\S+)> (!antiafk)$/,
-            'user_toggle_antiafk',
-            "User toggled Anti AFK feature"
-        )
-
-        bot.on('user_toggle_antiafk', (username, command) => {
-            console.log("Toggle antiafk...")
-            antiAfkFnc()
-        })
+//        bot.chatAddPattern(
+//            /^<(\S+)> (!antiafk)$/,
+//            'user_toggle_antiafk',
+//            "User toggled Anti AFK feature"
+//        )
+//
+//        bot.on('user_toggle_antiafk', (username, command) => {
+//            console.log("Toggle antiafk...")
+//            antiAfkFnc()
+//        })
 
         // CHAT EVENTS for asking the bot's location
         bot.chatAddPattern(
