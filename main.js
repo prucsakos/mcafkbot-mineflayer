@@ -56,7 +56,7 @@ function antiAfkFnc() {
     antiAfkEnabled = !antiAfkEnabled;
     bot.chat(antiAfkEnabled ? "Anti AFK bekapcsolva." : "Anti AFK kikapcsolva.");
 
-    if (ANTIAFKATSTART) {
+    if (antiAfkEnabled) {
         antiAfkInterval = setInterval(() => {
             // Jump
             bot.setControlState('jump', true);
@@ -81,7 +81,7 @@ function antiAfkFnc() {
 //////// SPAWN
 bot.once('spawn', () => {
 
-    if (antiAfkEnabled){
+    if (ANTIAFKATSTART){
         antiAfkFnc()
     }
 
