@@ -2,6 +2,7 @@ const mineflayer = require('mineflayer')
 const { pathfinder, Movements, goals } = require('mineflayer-pathfinder')
 const { GoalNear } = goals
 
+const VERSION = "10"
 const DEBUGMODE = true
 const ANTIAFKATSTART = true
 let antiAfkEnabled = false
@@ -189,6 +190,17 @@ bot.once('spawn', () => {
         }
     })
 
+    // CHAT EVENTS for sleeping
+    bot.chatAddPattern(
+        /^<(\S+)> (!version)$/,
+        'user_request_version',
+        "Version"
+    );
+
+    bot.on('user_request_version', (username, command) => {
+        bot.chat("Version: " + VERSION)
+    })
+
     // Listen for when a player joins the game
     bot.on('playerJoined', (player) => {
         // Check if the joined player is not the bot itself
@@ -197,7 +209,9 @@ bot.once('spawn', () => {
             const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)].replace('{username}', player.username);
             bot.chat(randomMessage);
         }
-    });
+    })
+
+    
 
   })
 
