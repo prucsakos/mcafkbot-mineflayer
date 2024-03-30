@@ -3,6 +3,7 @@ const { pathfinder, Movements, goals } = require('mineflayer-pathfinder')
 const { GoalNear } = goals
 
 const DEBUGMODE = true
+const ANTIAFKATSTART = true
 let antiAfkEnabled = false
 let antiAfkInterval = 10000
 const options = {
@@ -55,7 +56,7 @@ function antiAfkFnc() {
     antiAfkEnabled = !antiAfkEnabled;
     bot.chat(antiAfkEnabled ? "Anti AFK bekapcsolva." : "Anti AFK kikapcsolva.");
 
-    if (antiAfkEnabled) {
+    if (ANTIAFKATSTART) {
         antiAfkInterval = setInterval(() => {
             // Jump
             bot.setControlState('jump', true);
