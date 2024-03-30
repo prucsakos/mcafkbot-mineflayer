@@ -5,6 +5,8 @@ const { GoalNear } = goals
 const VERSION = "10"
 const DEBUGMODE = true
 const ANTIAFKATSTART = true
+const ANTIAFK_FORWARDTIME = 1000
+const ANTIAFK_JUMPTIME = 500
 let antiAfkEnabled = false
 let antiAfkInterval = 10000
 const options = {
@@ -31,14 +33,11 @@ const welcomeMessages = [
     "Hey {username}, szuper, hogy csatlakoztál! Hogyan vagy ma?"
 ];
   
-const bot = mineflayer.createBot(options)
-// Load pathfinder plugin
-bot.loadPlugin(pathfinder)
+global.bot = null
 
-/// FUNCTIONS
+bot = createBot(options)
+setupBot(bot)
 
-// Function to find the closest bed
-// Returns bed object or null
 function findClosestBed() {
     const beds = bot.findBlocks({
         matching: block => bot.isABed(block),
@@ -67,11 +66,11 @@ function antiAfkFnc() {
             // Move a little bit
             // Toggle forward movement briefly
             bot.setControlState('forward', true);
-            setTimeout(() => bot.setControlState('forward', false), 300); // Move forward for 1 second
+            setTimeout(() => bot.setControlState('forward', false), ANTIAFK_FORWARDTIME); // Move forward for 1 second
             
             // Jump
             bot.setControlState('jump', true);
-            setTimeout(() => bot.setControlState('jump', false), 100);
+            setTimeout(() => bot.setControlState('jump', false), ANTIAFK_JUMPTIME);
             
 
         }, 10000); // Every 10 seconds
@@ -80,140 +79,171 @@ function antiAfkFnc() {
     }
 }
 
-//////// SPAWN
-bot.once('spawn', () => {
+function createBot(options) {
+    return mineflayer.createBot(options)
+}
 
-    if (ANTIAFKATSTART){
-        antiAfkFnc()
-    }
+// pass by reference
+function setupBot(bot) { 
+    // Load pathfinder plugin
+    bot.loadPlugin(pathfinder)
+    
+    /// FUNCTIONS
+    
+    // Function to find the closest bed
+    // Returns bed object or null
+    
+    //////// SPAWN
+    bot.once('spawn', () => {
 
-    bot.chat('Hali, jöttem afkolni')
-
-    if (DEBUGMODE) {
-        console.log("Debug mode on")
-        bot.chatAddPattern(
-            /^(.*)$/,
-            "_debug",
-            "Debug"
-        )
-        bot.on("_debug", (text)=>{console.log(text)})
-    }
-
-    //// CHAT EVENTS
-    bot.chatAddPattern(
-        /^<(\S+)> (!help|!segíts)$/,
-        'user_request_help',
-        "User requested for available chat commands"
-    )
-    const request_help_handler = (name, command) => {
-        bot.chat(["Elérhető parancsaim:", "!help / !segíts - segítek", "!come / !gyere - megyek hozzád", "!antiafk - mozgok néha vagy valami",
-                    "!where !hol !holvagy - elmondom hol vagyok",
-                    "!feküdj!sleep!aludj"].join("\n"))
-    }
-    bot.on('user_request_help', request_help_handler)
-
-    // CALL THE BOT
-    bot.chatAddPattern(
-        /^<(\S+)> (!come|!gyere)$/,
-        'user_request_come',
-        "User requested the bot to come"
-    )
-
-    bot.on('user_request_come', (username, command) => {
-        const player = bot.players[username] ? bot.players[username].entity : null
-
-        if (!player) {
-            bot.chat("Nem találak, hol vagy?")
-            return
-        }
-
-        const mcData = require('minecraft-data')(bot.version)
-        const defaultMove = new Movements(bot, mcData)
-        bot.pathfinder.setMovements(defaultMove)
-
-        bot.chat("Jövök ide: " + player.position.x.toFixed(2).toString() + " " + player.position.y.toFixed(2).toString() +" "+ player.position.z.toFixed(2).toString()) 
-        const goal = new GoalNear(player.position.x, player.position.y, player.position.z, 1)
-        bot.pathfinder.goto(goal)
-            .then(() => bot.chat("Itt vagyok!"))
-            .catch(err => {
-                console.log(err)
-                bot.chat("Nem tudok odamenni.")
-            })
-    })
-
-    // CHAT EVENTS for antiafk
-    bot.chatAddPattern(
-        /^<(\S+)> (!antiafk)$/,
-        'user_toggle_antiafk',
-        "User toggled Anti AFK feature"
-    )
-
-    bot.on('user_toggle_antiafk', (username, command) => {
-        antiAfkFnc()
-    })
-
-    // CHAT EVENTS for asking the bot's location
-    bot.chatAddPattern(
-        /^<(\S+)> (!where|!hol|!holvagy)$/,
-        'user_request_location',
-        "User requested the bot's location"
-    )
-
-    bot.on('user_request_location', (username, command) => {
-        // Access the bot's current position
-        const pos = bot.entity.position
-        // Format the position to a readable string
-        const posText = `Jelenlegi pozícióm: X=${pos.x.toFixed(2)}, Y=${pos.y.toFixed(2)}, Z=${pos.z.toFixed(2)}`
-        // Send the position in chat
-        bot.chat(posText)
-    })
-
-    // CHAT EVENTS for sleeping
-    bot.chatAddPattern(
-        /^<(\S+)> (!sleep|!lay|!feküdj)$/,
-        'user_request_sleep',
-        "User requested the bot to sleep"
-    );
-
-    bot.on('user_request_sleep', async (username, command) => {
-        try {
-            const bed = findClosestBed();
-            console.log("Ágy keresése befejeződött, " + bed? "Van ágy" : "Nincs ágy")
-            if (bed) {
-                await bot.sleep(bed);
-                bot.chat("Jó éjt!");
-            } else {
-                bot.chat("Nem találtam ágyat.");
+        if (ANTIAFKATSTART){
+            if (!antiAfkEnabled) {
+                antiAfkFnc()
             }
-        } catch (err) {
-            console.error(err);
-            bot.chat("Nem tudok aludni most.");
         }
-    })
 
-    // CHAT EVENTS for sleeping
-    bot.chatAddPattern(
-        /^<(\S+)> (!version)$/,
-        'user_request_version',
-        "Version"
-    );
+        bot.chat('Hali, jöttem afkolni')
 
-    bot.on('user_request_version', (username, command) => {
-        bot.chat("Version: " + VERSION)
-    })
-
-    // Listen for when a player joins the game
-    bot.on('playerJoined', (player) => {
-        // Check if the joined player is not the bot itself
-        if (player.username !== bot.username) {
-            // Select a random welcome message
-            const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)].replace('{username}', player.username);
-            bot.chat(randomMessage);
+        if (DEBUGMODE) {
+            console.log("Debug mode on")
+            bot.chatAddPattern(
+                /^(.*)$/,
+                "_debug",
+                "Debug"
+            )
+            bot.on("_debug", (text)=>{console.log(text)})
         }
+
+        bot.on('end', (text) => {
+            console.log("The bot disconnected.")
+            console.log(text)
+            console.log("Creating new bot....")
+            bot = createBot(options)
+            bot = setupBot(bot)
+        })
+        bot.on('kicked', (text) => {
+            console.log("The bot is kicked")
+            console.log(text)
+            console.log("Creating new bot....")
+            bot = createBot(options)
+            bot = setupBot(bot)
+        })
+
+        //// CHAT EVENTS
+        bot.chatAddPattern(
+            /^<(\S+)> (!help|!segíts)$/,
+            'user_request_help',
+            "User requested for available chat commands"
+        )
+        const request_help_handler = (name, command) => {
+            bot.chat(["Elérhető parancsaim:", "!help / !segíts - segítek", "!come / !gyere - megyek hozzád", "!antiafk - mozgok néha vagy valami",
+                        "!where !hol !holvagy - elmondom hol vagyok",
+                        "!feküdj!sleep!aludj"].join("\n"))
+        }
+        bot.on('user_request_help', request_help_handler)
+
+        // CALL THE BOT
+        bot.chatAddPattern(
+            /^<(\S+)> (!come|!gyere)$/,
+            'user_request_come',
+            "User requested the bot to come"
+        )
+
+        bot.on('user_request_come', (username, command) => {
+            const player = bot.players[username] ? bot.players[username].entity : null
+
+            if (!player) {
+                bot.chat("Nem találak, hol vagy?")
+                return
+            }
+
+            const mcData = require('minecraft-data')(bot.version)
+            const defaultMove = new Movements(bot, mcData)
+            bot.pathfinder.setMovements(defaultMove)
+
+            bot.chat("Jövök ide: " + player.position.x.toFixed(2).toString() + " " + player.position.y.toFixed(2).toString() +" "+ player.position.z.toFixed(2).toString()) 
+            const goal = new GoalNear(player.position.x, player.position.y, player.position.z, 1)
+            bot.pathfinder.goto(goal)
+                .then(() => bot.chat("Itt vagyok!"))
+                .catch(err => {
+                    console.log(err)
+                    bot.chat("Nem tudok odamenni.")
+                })
+        })
+
+        // CHAT EVENTS for antiafk
+        bot.chatAddPattern(
+            /^<(\S+)> (!antiafk)$/,
+            'user_toggle_antiafk',
+            "User toggled Anti AFK feature"
+        )
+
+        bot.on('user_toggle_antiafk', (username, command) => {
+            console.log("Toggle antiafk...")
+            antiAfkFnc()
+        })
+
+        // CHAT EVENTS for asking the bot's location
+        bot.chatAddPattern(
+            /^<(\S+)> (!where|!hol|!holvagy)$/,
+            'user_request_location',
+            "User requested the bot's location"
+        )
+
+        bot.on('user_request_location', (username, command) => {
+            // Access the bot's current position
+            const pos = bot.entity.position
+            // Format the position to a readable string
+            const posText = `Jelenlegi pozícióm: X=${pos.x.toFixed(2)}, Y=${pos.y.toFixed(2)}, Z=${pos.z.toFixed(2)}`
+            // Send the position in chat
+            bot.chat(posText)
+        })
+
+        // CHAT EVENTS for sleeping
+        bot.chatAddPattern(
+            /^<(\S+)> (!sleep|!lay|!feküdj)$/,
+            'user_request_sleep',
+            "User requested the bot to sleep"
+        );
+
+        bot.on('user_request_sleep', async (username, command) => {
+            try {
+                const bed = findClosestBed();
+                console.log("Ágy keresése befejeződött, " + bed? "Van ágy" : "Nincs ágy")
+                if (bed) {
+                    await bot.sleep(bed);
+                    bot.chat("Jó éjt!");
+                } else {
+                    bot.chat("Nem találtam ágyat.");
+                }
+            } catch (err) {
+                console.error(err);
+                bot.chat("Nem tudok aludni most.");
+            }
+        })
+
+        // CHAT EVENTS for sleeping
+        bot.chatAddPattern(
+            /^<(\S+)> (!version)$/,
+            'user_request_version',
+            "Version"
+        );
+
+        bot.on('user_request_version', (username, command) => {
+            bot.chat("Version: " + VERSION)
+        })
+
+        // Listen for when a player joins the game
+        bot.on('playerJoined', (player) => {
+            // Check if the joined player is not the bot itself
+            if (player.username !== bot.username) {
+                // Select a random welcome message
+                const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)].replace('{username}', player.username);
+                bot.chat(randomMessage);
+            }
+        })
     })
-
-
-  })
+}
 
 
   
