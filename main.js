@@ -2,11 +2,12 @@ const mineflayer = require('mineflayer')
 const { pathfinder, Movements, goals } = require('mineflayer-pathfinder')
 const { GoalNear } = goals
 
-const VERSION = "10"
+const VERSION = "11"
 const DEBUGMODE = true
 //const ANTIAFKATSTART = true
 //const ANTIAFK_FORWARDTIME = 1000
 //const ANTIAFK_JUMPTIME = 500
+let nowFishing = false; // Track fishing mode state
 let antiAfkEnabled = false
 let antiAfkInterval = 10000
 const options = {
@@ -33,10 +34,84 @@ const welcomeMessages = [
     "Hey {username}, szuper, hogy csatlakoztál! Hogyan vagy ma?"
 ];
   
-global.bot = null
+let bot = null
 
 bot = createBot(options)
 setupBot(bot)
+
+/// HELPER
+
+function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/// END OF HELPER
+
+
+//// FISHING FUNCTIONS - from https://github.com/PrismarineJS/mineflayer/blob/master/examples/fisherman.js
+function toggleFishingMode() {
+    if (nowFishing) {
+        //console.log("Stop fishing - from toggle")
+        //stopFishing()
+        nowFishing = !nowFishing
+    } else {
+        //console.log("Start fishing - from toggle")
+        nowFishing = !nowFishing
+        startFishing()
+    }
+}
+
+function onCollect(player, entity) {
+    if (entity.kind === 'Drops' && player === bot.entity) {
+        console.log("oncolleclt: isfishing." + nowFishing)
+        console.log("onCollect triggered");
+        if (nowFishing) {
+            // Only restart fishing if we're still in fishing mode
+            startFishing();
+        }
+    }
+}
+  
+async function startFishing() {
+
+    while(nowFishing) {
+        console.log("Fishing...  - from startFishing");
+        try {
+            await bot.equip(bot.registry.itemsByName.fishing_rod.id, 'hand');
+            await bot.fish()
+            console.log("Finished a fish")
+        } catch (err) {
+            console.log(err.message)
+            bot.chat("Vmi félre ment halászás közben");
+        }
+    }
+    bot.chat("Halászat vége")
+
+    //if (nowFishing) return; // Prevents starting fishing if already fishing
+    //console.log("Fishing...  - from startFishing");
+    //nowFishing = true;
+//
+    //try {
+    //    await bot.equip(bot.registry.itemsByName.fishing_rod.id, 'hand');
+    //    bot.on('playerCollect', onCollect); // Ensure the listener is set each time we start fishing
+    //    await bot.fish();
+    //    console.log("Finished a fish")
+    //} catch (err) {
+    //    console.log(err.message);
+    //    bot.chat("Vmi félre ment halászás közben");
+    //}
+    //nowFishing = false; // Move this into onCollect for re-triggering startFishing
+}
+  
+function stopFishing() {
+    if (nowFishing) {
+        // console.log("Stop fishing - from stopFishing");
+        // bot.activateItem(); // Potentially stop the fishing action
+        // nowFishing = false;
+        // bot.removeListener('playerCollect', onCollect); // Properly manage listener
+    }
+}
+/// END OF FISHING FUNCTIONS
 
 function findClosestBed() {
     const beds = bot.findBlocks({
@@ -138,7 +213,9 @@ function setupBot(bot) {
         const request_help_handler = (name, command) => {
             bot.chat(["Elérhető parancsaim:", "!help / !segíts - segítek", "!come / !gyere - megyek hozzád", "!antiafk - mozgok néha vagy valami",
                         "!where !hol !holvagy - elmondom hol vagyok",
-                        "!feküdj!sleep!aludj"].join("\n"))
+                        "!feküdj!sleep!aludj",
+                        "!teddle - keresek egy chestet és berakom a chestbe",
+                    "!fish!fishing!hal - adj egy botot és halászok"].join("\n"))
         }
         bot.on('user_request_help', request_help_handler)
 
@@ -232,6 +309,54 @@ function setupBot(bot) {
         bot.on('user_request_version', (username, command) => {
             bot.chat("Version: " + VERSION)
         })
+
+        // Inside setupBot function, after other bot.chatAddPattern calls
+        bot.chatAddPattern(
+            /^<(\S+)> (!fishing|!fish|!hal)$/,
+            'user_toggle_fishing',
+            "User toggled fishing mode"
+        );
+
+        bot.on('user_toggle_fishing', async (username) => {
+            toggleFishingMode();
+        });
+
+        bot.chatAddPattern(
+            /^<(\S+)> !teddle$/,
+            'user_request_teddle',
+            "User requests the bot to teddle"
+        );
+        
+        bot.on('user_request_teddle', async (username) => {
+            const mcData = require('minecraft-data')(bot.version);
+            const chestId = mcData.blocksByName.chest.id; // For regular chests
+
+            const chestBlocks = bot.findBlocks({
+                matching: chestId,
+                maxDistance: 16,
+                count: 1
+            });
+        
+            if (chestBlocks.length === 0) {
+                bot.chat("Nincs láda a közelben");
+                return;
+            }
+        
+            try {
+                const chestPosition = bot.blockAt(chestBlocks[0]);
+                const chest = await bot.openContainer(chestPosition);
+        
+                for (let item of bot.inventory.items()) {
+                    await chest.deposit(item.type, null, item.count);
+                }
+        
+                bot.chat("Bedobtam őket a ládába");
+                await chest.close();
+            } catch (error) {
+                console.error(error);
+                bot.chat("Nem sikerült betenni őket.");
+            }
+        });
 
         // Listen for when a player joins the game
         bot.on('playerJoined', (player) => {
