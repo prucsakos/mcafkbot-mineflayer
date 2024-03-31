@@ -46,42 +46,41 @@ function wait(ms) {
 }
 /// END OF HELPER
 
-///// AUTO-EAT
-//const checkHungerInterval = setInterval(eatFoodIfNeeded, 1000);
-//async function eatFoodIfNeeded() {
-//    if (bot.food < 18) { // Adjust this threshold as needed
-//        // Define a list of known food item names
-//        const knownFoodItems = [
-//            'apple', 'baked_potato', 'beef', 'bread', 'carrot',
-//            'cooked_chicken', 'cooked_cod', 'cooked_mutton', 'cooked_porkchop',
-//            'cooked_rabbit', 'cooked_salmon', 'cookie', 'melon_slice', 'mushroom_stew',
-//            'pumpkin_pie', 'rabbit_stew', 'beetroot', 'beetroot_soup', 'sweet_berries'
-//            // Add or remove items based on your Minecraft version and needs
-//        ];
-//
-//        // Find the first item in the inventory that matches the known food items
-//        const foodItem = bot.inventory.items().find(item => knownFoodItems.includes(item.name));
-//
-//        if (foodItem) {
-//            console.log('Eating', foodItem.name);
-//            try {
-//                // Equip the food item in the bot's hand
-//                await bot.equip(foodItem, 'hand');
-//                console.log('Eating', foodItem.name);
-//                // Now consume the food item
-//                await bot.consume();
-//                console.log('Finished eating');
-//            } catch (err) {
-//                console.error('Could not eat:', err.message);
-//            }
-//        } else {
-//            bot.chat("I'm hungry but have no food.");
-//        }
-//    } else {
-//        console.log('No need to eat. Hunger level is good.');
-//    }
-//}
-/// END OF AUTO-EAT
+// EATING FNC
+
+async function eatFoodIfNeeded() {
+    if (bot.food < 18) { // Adjust this threshold as needed
+        // Define a list of known food item names
+        const knownFoodItems = [
+            'apple', 'baked_potato', 'beef', 'bread', 'carrot',
+            'cooked_chicken', 'cooked_cod', 'cooked_mutton', 'cooked_porkchop',
+            'cooked_rabbit', 'cooked_salmon', 'cookie', 'melon_slice', 'mushroom_stew',
+            'pumpkin_pie', 'rabbit_stew', 'beetroot', 'beetroot_soup', 'sweet_berries'
+            // Add or remove items based on your Minecraft version and needs
+        ];
+
+        // Find the first item in the inventory that matches the known food items
+        const foodItem = bot.inventory.items().find(item => knownFoodItems.includes(item.name));
+
+        if (foodItem) {
+            console.log('Eating', foodItem.name);
+            try {
+                // Equip the food item in the bot's hand
+                await bot.equip(foodItem, 'hand');
+                console.log('Eating', foodItem.name);
+                // Now consume the food item
+                await bot.consume();
+                console.log('Finished eating');
+            } catch (err) {
+                console.error('Could not eat:', err.message);
+            }
+        } else {
+            bot.chat("I'm hungry but have no food.");
+        }
+    } else {
+        console.log('No need to eat. Hunger level is good.');
+    }
+}
 
 //// FISHING FUNCTIONS - from https://github.com/PrismarineJS/mineflayer/blob/master/examples/fisherman.js
 function toggleFishingMode() {
@@ -309,6 +308,18 @@ function setupBot(bot) {
             const posText = `Jelenlegi pozícióm: X=${pos.x.toFixed(2)}, Y=${pos.y.toFixed(2)}, Z=${pos.z.toFixed(2)}`
             // Send the position in chat
             bot.chat(posText)
+        })
+
+        // CHAT EVENTS for asking the bot's location
+        bot.chatAddPattern(
+            /^<(\S+)> (!eat|!egyél)$/,
+            'user_request_eat',
+            "Eat"
+        )
+
+        bot.on('user_request_eat', async (username, command) => {
+            console.log("I start eating..")
+            await eatFoodIfNeeded()
         })
 
         // CHAT EVENTS for sleeping
