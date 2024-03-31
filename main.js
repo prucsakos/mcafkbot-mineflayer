@@ -2,7 +2,7 @@ const mineflayer = require('mineflayer')
 const { pathfinder, Movements, goals } = require('mineflayer-pathfinder')
 const { GoalNear } = goals
 
-const VERSION = "11"
+const VERSION = "12"
 const DEBUGMODE = true
 //const ANTIAFKATSTART = true
 //const ANTIAFK_FORWARDTIME = 1000
@@ -86,7 +86,7 @@ async function eatFoodIfNeeded() {
 function toggleFishingMode() {
     if (nowFishing) {
         //console.log("Stop fishing - from toggle")
-        //stopFishing()
+        stopFishing()
         nowFishing = !nowFishing
     } else {
         //console.log("Start fishing - from toggle")
@@ -139,8 +139,8 @@ async function startFishing() {
   
 function stopFishing() {
     if (nowFishing) {
-        // console.log("Stop fishing - from stopFishing");
-        // bot.activateItem(); // Potentially stop the fishing action
+        console.log("Stop fishing - from stopFishing");
+        bot.activateItem(); // Potentially stop the fishing action
         // nowFishing = false;
         // bot.removeListener('playerCollect', onCollect); // Properly manage listener
     }
