@@ -2,7 +2,7 @@ const mineflayer = require('mineflayer')
 const { pathfinder, Movements, goals } = require('mineflayer-pathfinder')
 const { GoalNear } = goals
 
-const VERSION = "12"
+const VERSION = "13"
 const DEBUGMODE = true
 //const ANTIAFKATSTART = true
 //const ANTIAFK_FORWARDTIME = 1000
