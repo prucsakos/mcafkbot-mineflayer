@@ -249,7 +249,8 @@ function setupBot(bot) {
                         "!where !hol !holvagy - elmondom hol vagyok",
                         "!feküdj!sleep!aludj",
                         "!teddle - keresek egy chestet és berakom a chestbe",
-                    "!fish!fishing!hal - adj egy botot és halászok"].join("\n"))
+                    "!fish!fishing!hal - adj egy botot és halászok",
+                    "!reconnect - vissza jövök 1 perc múlva"].join("\n"))
         }
         bot.on('user_request_help', request_help_handler)
 
@@ -282,6 +283,20 @@ function setupBot(bot) {
                 })
         })
 
+        bot.chatAddPattern(
+            /^<(\S+)> (!reconnect)$/,
+            'user_request_reconnect',
+            "Reconnect"
+        )
+
+        bot.on('user_request_reconnect', async (username, command) => {
+            console.log("The bot reconnected.")
+            console.log("Creating new bot....")
+            bot.end("Reconnecting...")
+            await wait(30 * 1000)
+            bot = createBot(options)
+            bot = setupBot(bot)
+        })
         // CHAT EVENTS for antiafk
 //        bot.chatAddPattern(
 //            /^<(\S+)> (!antiafk)$/,
