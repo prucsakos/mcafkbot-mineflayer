@@ -161,6 +161,14 @@ function findClosestBed() {
     }
 }
 
+function reconnectBot(text) {
+    console.log("The bot disconnected.")
+    console.log(text)
+    console.log("Creating new bot....")
+    bot = createBot(options)
+    bot = setupBot(bot)
+}
+
 //function antiAfkFnc() {
 //    antiAfkEnabled = !antiAfkEnabled;
 //    bot.chat(antiAfkEnabled ? "Anti AFK bekapcsolva." : "Anti AFK kikapcsolva.");
@@ -223,20 +231,8 @@ function setupBot(bot) {
             bot.on("_debug", (text)=>{console.log(text)})
         }
 
-        bot.on('end', (text) => {
-            console.log("The bot disconnected.")
-            console.log(text)
-            console.log("Creating new bot....")
-            bot = createBot(options)
-            bot = setupBot(bot)
-        })
-        bot.on('kicked', (text) => {
-            console.log("The bot is kicked")
-            console.log(text)
-            console.log("Creating new bot....")
-            bot = createBot(options)
-            bot = setupBot(bot)
-        })
+        bot.on('end', reconnectBot)
+        bot.on('kicked', reconnectBot)
 
         //// CHAT EVENTS
         bot.chatAddPattern(
@@ -292,6 +288,7 @@ function setupBot(bot) {
         bot.on('user_request_reconnect', async (username, command) => {
             console.log("The bot reconnected.")
             console.log("Creating new bot....")
+            bot.removeListener('end', reconnectBot)
             bot.end("Reconnecting...")
             await wait(30 * 1000)
             bot = createBot(options)
