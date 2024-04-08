@@ -42,7 +42,7 @@ setupBot(bot)
 // Periodic Check for Bot Connection
 function startConnectionCheck() {
     setInterval(async () => {
-        if (!bot.entity.position) {
+        if (!bot || !bot.entity || !bot.entity.position) {
             console.log("Bot disconnected, attempting to reconnect...");
             try {
                 bot = createBot(options);
