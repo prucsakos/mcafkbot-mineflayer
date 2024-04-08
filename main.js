@@ -39,6 +39,25 @@ let bot = null
 bot = createBot(options)
 setupBot(bot)
 
+// Periodic Check for Bot Connection
+function startConnectionCheck() {
+    setInterval(async () => {
+        if (!bot || !bot.isConnected) {
+            console.log("Bot disconnected, attempting to reconnect...");
+            try {
+                bot = createBot(options);
+                setupBot(bot);
+                console.log("Reconnection successful.");
+            } catch (error) {
+                console.error("Failed to reconnect:", error);
+            }
+        } else {
+            console.log("Bot is still connected.");
+        }
+    }, 5 * 60 * 1000); // 5 minutes in milliseconds
+}
+startConnectionCheck()
+
 /// HELPER
 
 function wait(ms) {
