@@ -35,28 +35,38 @@ const welcomeMessages = [
 ];
   
 let bot = null
+let intervalId = null;
 
 bot = createBot(options)
 setupBot(bot)
 
 // Periodic Check for Bot Connection
-function startConnectionCheck() {
-    setInterval(async () => {
-        if (!bot || !bot.entity || !bot.entity.position) {
-            console.log("Bot disconnected, attempting to reconnect...");
-            try {
-                bot = createBot(options);
-                setupBot(bot);
-                console.log("Reconnection successful.");
-            } catch (error) {
-                console.error("Failed to reconnect:", error);
-            }
-        } else {
-            console.log("Bot is still connected.");
-        }
+function startConnectionCheck(bot) {
+    // Clear existing interval if it exists
+    if (intervalId !== null) {
+        clearInterval(intervalId);
+    }
+
+    // Set up a new interval
+    intervalId = setInterval(() => {
+        connectionCheck(bot);
     }, 5 * 60 * 1000); // 5 minutes in milliseconds
 }
-startConnectionCheck()
+function connectionCheck(bot) {
+    try {
+        let test_call = bot.entity.position
+        console.log("Bot is still connected. Pos: " + test_call);
+    } catch (error){
+        console.log("Bot disconnected, attempting to reconnect... | Error code: " + error);
+        try {
+            bot = createBot(options);
+            setupBot(bot);
+            console.log("Reconnection successful.");
+        } catch (error) {
+            console.error("Failed to reconnect:", error);
+        }
+    }
+}
 
 /// HELPER
 
@@ -221,6 +231,10 @@ function createBot(options) {
 
 // pass by reference
 function setupBot(bot) { 
+
+    // set timer for timeout checking
+    startConnectionCheck(bot)
+
     // Load pathfinder plugin
     bot.loadPlugin(pathfinder)
     
