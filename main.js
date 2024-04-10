@@ -233,7 +233,7 @@ function createBot(options) {
 function setupBot(bot) { 
 
     // set timer for timeout checking
-    startConnectionCheck(bot)
+    //startConnectionCheck(bot)
 
     // Load pathfinder plugin
     bot.loadPlugin(pathfinder)
